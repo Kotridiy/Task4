@@ -1,13 +1,14 @@
-﻿using System;
+﻿using DataModel;
+using System;
 
 namespace DataAccessLayer.Models
 {
-    public class SoldProduct
+    public class SoldProduct : ISoldProduct
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public Client Client { get; set; }
-        public Manager Manager { get; set; }
-        public Product Product { get; set; }
+        public IClient Client { get; set; }
+        public IManager Manager { get; set; }
+        public IProduct Product { get; set; }
     }
 }

@@ -1,19 +1,30 @@
-﻿using FileWatcherData;
+﻿using BusinessLogic.Csv;
+using DataAccessLayer.Interfaces;
+using FileWatcherData;
 using FileWatcherData.Interfaces;
 using FileWatcherModel;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
     public class FileLogic
     {
+        const string VALIDATEREGEX = @"^(\w+)_\d{8}(?:\((\d+)\))?\.csv$";
+        readonly string readyPath;
         IWatcherUnitOfWork WatcherUnitOfWork { get; set; }
+        IDataUnitOfWork DataUnitOfWork { get; set; }
+        CsvParser CsvParser { get; set; }
 
-        public FileLogic()
+        public FileLogic(FileLogicSettings settings = null)
         {
-            WatcherUnitOfWork = WatcherBuilder.CreateUnitOfWork();
+            settings ??= new FileLogicSettings();
+            readyPath = settings.readyPath;
+            WatcherUnitOfWork = WatcherBuilder.CreateUnitOfWork(settings.watcherConnection);
+            DataUnitOfWork = DataAccessBuilder.CreateUnitOfWork(settings.dataConnection);
+            CsvParser = new CsvParser(DataUnitOfWork);
         }
 
         public void OnFileCreate(object sender, FileSystemEventArgs e)
@@ -21,25 +32,37 @@ namespace BusinessLogic
             FileInfo info = new FileInfo(e.FullPath);
             Guid fileID = new Guid(FileHash.GetFileHash(info));
 
-            var file = WatcherUnitOfWork.GetFile(fileID);
-            if (file == null || file.Status == FileStatus.Failed)
+            Match match;
+            match = Regex.Match(info.Name, VALIDATEREGEX);
+            if (match.Success)
             {
-                if (file == null)
+                var managerName = match.Groups[1].Value;
+                int copyNum = 0;
+                if (match.Groups[2].Success)
                 {
-                    file = new WatchFile
-                    {
-                        Id = fileID,
-                        Name = info.Name,
-                        LastWriteTime = info.LastWriteTime,
-                        Length = info.Length,
-                    };
+                    copyNum = int.Parse(match.Groups[2].Value);
                 }
-                file.Status = FileStatus.OnReading;
-                WatcherUnitOfWork.AddFile(file);
 
-                Task<IFile> readingTask = new Task<IFile>(() => ReadFile(file));
-                Task afterReadTask = readingTask.ContinueWith(task => AfterReading(task.Result));
-                readingTask.Start();
+                var file = WatcherUnitOfWork.GetFile(fileID);
+                if (file == null || file.Status == FileStatus.Failed)
+                {
+                    if (file == null)
+                    {
+                        file = new WatchFile
+                        {
+                            Id = fileID,
+                            Name = info.Name,
+                            LastWriteTime = info.LastWriteTime,
+                            Length = info.Length,
+                        };
+                    }
+                    file.Status = FileStatus.OnReading;
+                    WatcherUnitOfWork.AddFile(file);
+
+                    Task<IFile> readingTask = new Task<IFile>(() => ReadFile(file, info.FullName, managerName));
+                    Task afterReadTask = readingTask.ContinueWith(task => AfterReading(task.Result));
+                    readingTask.Start();
+                }
             }
         }
 
@@ -56,15 +79,17 @@ namespace BusinessLogic
             }
         }
 
-        private IFile ReadFile(IFile file)
+        private IFile ReadFile(IFile file, string fullpath, string managerName)
         {
-            if ((new Random()).Next() % 2 == 0)
+            if (CsvParser.ReadCsvFile(fullpath, managerName))
             {
                 file.Status = FileStatus.Success;
-            } else
+            }
+            else
             {
                 file.Status = FileStatus.Failed;
             }
+
             return file;
         }
     }

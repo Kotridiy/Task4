@@ -25,7 +25,14 @@ namespace FileWatcherData
 
         public void Add(IFile file)
         {
-            FileWatcherContext.Add(file);
+            if (Get(file.Id) == null)
+            {
+                FileWatcherContext.Add(file);
+            }
+            else
+            {
+                FileWatcherContext.Update(file);
+            }
         }
     }
 }

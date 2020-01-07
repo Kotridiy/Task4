@@ -1,14 +1,14 @@
-﻿using DataModel;
+﻿using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccessLayer
 {
     public class ApplicationContext : DbContext
     {
-        public DbSet<IClient> Clients { get; set; }
-        public DbSet<IManager> Managers { get; set; }
-        public DbSet<IProduct> Products { get; set; }
-        public DbSet<ISoldProduct> SoldProducts { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Manager> Managers { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<SoldProduct> SoldProducts { get; set; }
 
         public ApplicationContext()
         {
