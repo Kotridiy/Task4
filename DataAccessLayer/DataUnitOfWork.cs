@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Interfaces;
+using DataAccessLayer.Models;
 using DataModel;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,48 @@ namespace DataAccessLayer
         //TODO
         public ISoldProduct AddRecord(ICsvRecord record)
         {
-            throw new NotImplementedException();
+            var soldProduct = new SoldProduct()
+            {
+                Client = GetClient(record.Client),
+                Product = GetProduct(record.Product, record.Price),
+                Manager = GetManager(record.Manager),
+                Date = record.Date
+            };
+            SoldProductRepository.Add(soldProduct);
+            return soldProduct;
+        }
+
+        private IManager GetManager(string name)
+        {
+            var manager = ManagerRepository.Get(name);
+            if (manager == null)
+            {
+                manager = new Manager() { Name = name };
+                ManagerRepository.AddAndSave(manager);
+            }
+            return manager;
+        }
+
+        private IProduct GetProduct(string name, int price)
+        {
+            var product = ProductRepository.Get(name);
+            if (product == null)
+            {
+                product = new Product() { Name = name, Price = price };
+                ProductRepository.AddAndSave(product);
+            }
+            return product;
+        }
+
+        private IClient GetClient(string name)
+        {
+            var client = ClientRepository.Get(name);
+            if (client == null)
+            {
+                client = new Client() { Name = name };
+                ClientRepository.AddAndSave(client);
+            }
+            return client;
         }
 
         public void RemoveRecords(IEnumerable<ISoldProduct> items)

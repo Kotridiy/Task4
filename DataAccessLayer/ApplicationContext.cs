@@ -1,5 +1,8 @@
 ﻿using DataAccessLayer.Models;
+using DataModel;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 
 namespace DataAccessLayer
 {
@@ -17,7 +20,7 @@ namespace DataAccessLayer
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=helloappdb;Trusted_Connection=True;");
+            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Monitor_data;Trusted_Connection=True;");
         }
     }
 }
