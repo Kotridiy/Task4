@@ -13,24 +13,24 @@ namespace FileWatcherData
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        public IFile GetFile(Guid guid)
+        public FileDTO GetFile(Guid guid)
         {
-            return Repository.Get(guid);
+            return FileMapper.ToFileDTO(Repository.Get(guid));
         }
 
-        public void AddFile(IFile file)
+        public void AddFile(FileDTO file)
         {
             if (file.Id == null)
             {
                 throw new Exception("Guid can't be null. Use hash for it.");
             }
-            Repository.Add(file);
+            Repository.Add(FileMapper.ToFile(file));
             Repository.Save();
         }
 
         public void ModifyStatus(Guid guid, FileStatus status)
         {
-            IFile file = Repository.Get(guid);
+            WatchFile file = Repository.Get(guid);
             if (file != null) 
             {
                 file.Status = status;

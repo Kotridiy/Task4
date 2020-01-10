@@ -5,8 +5,8 @@ namespace FileWatcherData.Interfaces
 {
     public interface IWatcherUnitOfWork
     {
-        IFile GetFile(Guid guid);
-        void AddFile(IFile file);
+        FileDTO GetFile(Guid guid);
+        void AddFile(FileDTO file);
         void ModifyStatus(Guid guid, FileStatus status);
     }
 }

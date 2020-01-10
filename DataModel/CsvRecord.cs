@@ -1,9 +1,8 @@
-﻿using DataModel;
-using System;
+﻿using System;
 
-namespace BusinessLogic.Csv
+namespace DataModel
 {
-    public class CsvRecord : ICsvRecord
+    public class CsvRecord
     {
         public DateTime Date { get; set; }
         public string Client { get; set; }

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
-    public class FileLogic
+    public class FileProcessor
     {
         const string VALIDATEREGEX = @"^(\w+)_\d{8}(?:\((\d+)\))?\.csv$";
         readonly string readyPath;
@@ -18,7 +18,7 @@ namespace BusinessLogic
         IDataUnitOfWork DataUnitOfWork { get; set; }
         CsvParser CsvParser { get; set; }
 
-        public FileLogic(FileLogicSettings settings = null)
+        public FileProcessor(FileLogicSettings settings = null)
         {
             settings ??= new FileLogicSettings();
             readyPath = settings.readyPath;
@@ -44,11 +44,11 @@ namespace BusinessLogic
                 }
 
                 var file = WatcherUnitOfWork.GetFile(fileID);
-                if (file == null || file.Status == FileStatus.Failed)
+                if (file == null || file.Status == FileStatus.Failed || true)
                 {
                     if (file == null)
                     {
-                        file = new WatchFile
+                        file = new FileDTO
                         {
                             Id = fileID,
                             Name = info.Name,
@@ -59,14 +59,14 @@ namespace BusinessLogic
                     file.Status = FileStatus.OnReading;
                     WatcherUnitOfWork.AddFile(file);
 
-                    Task<IFile> readingTask = new Task<IFile>(() => ReadFile(file, info.FullName, managerName));
+                    Task<FileDTO> readingTask = new Task<FileDTO>(() => ReadFile(file, info.FullName, managerName));
                     Task afterReadTask = readingTask.ContinueWith(task => AfterReading(task.Result));
                     readingTask.Start();
                 }
             }
         }
 
-        private void AfterReading(IFile file)
+        private void AfterReading(FileDTO file)
         {
             WatcherUnitOfWork.ModifyStatus(file.Id, file.Status);
             if (file.Status == FileStatus.Success)
@@ -79,7 +79,7 @@ namespace BusinessLogic
             }
         }
 
-        private IFile ReadFile(IFile file, string fullpath, string managerName)
+        private FileDTO ReadFile(FileDTO file, string fullpath, string managerName)
         {
             if (CsvParser.ReadCsvFile(fullpath, managerName))
             {

@@ -1,22 +1,25 @@
 ﻿using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using DataAccessLayer.Repositories;
 using DataModel;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataAccessLayer
 {
     class DataUnitOfWork : IDataUnitOfWork
     {
-        IGenericRepository<IClient> ClientRepository { get; set; }
-        IGenericRepository<IProduct> ProductRepository { get; set; }
-        IGenericRepository<IManager> ManagerRepository { get; set; }
+        IGenericRepository<Client> ClientRepository { get; set; }
+        IGenericRepository<Product> ProductRepository { get; set; }
+        IGenericRepository<Manager> ManagerRepository { get; set; }
         ISoldProductRepository SoldProductRepository { get; set; }
+        object _sync = new object();
 
         public DataUnitOfWork(
-            IGenericRepository<IClient> clientRepository,
-            IGenericRepository<IProduct> productRepository,
-            IGenericRepository<IManager> managerRepository,
+            IGenericRepository<Client> clientRepository,
+            IGenericRepository<Product> productRepository,
+            IGenericRepository<Manager> managerRepository,
             ISoldProductRepository soldProductRepository)
         {
             ClientRepository = clientRepository ?? throw new ArgumentNullException(nameof(clientRepository));
@@ -25,21 +28,25 @@ namespace DataAccessLayer
             SoldProductRepository = soldProductRepository ?? throw new ArgumentNullException(nameof(soldProductRepository));
         }
 
-        //TODO
-        public ISoldProduct AddRecord(ICsvRecord record)
+        public SoldProductDTO AddRecord(CsvRecord record)
         {
-            var soldProduct = new SoldProduct()
+            SoldProduct soldProduct;
+            lock (_sync)
             {
-                Client = GetClient(record.Client),
-                Product = GetProduct(record.Product, record.Price),
-                Manager = GetManager(record.Manager),
-                Date = record.Date
-            };
-            SoldProductRepository.Add(soldProduct);
-            return soldProduct;
+                soldProduct = new SoldProduct()
+                {
+                    Client = GetClient(record.Client),
+                    Product = GetProduct(record.Product, record.Price),
+                    Manager = GetManager(record.Manager),
+                    Date = record.Date
+                };
+                SoldProductRepository.Add(soldProduct);
+                //(SoldProductRepository as SoldProductRepository)?.DetachModels(soldProduct);
+            }
+            return DataMapper.ToSoldProductDTO(soldProduct);
         }
 
-        private IManager GetManager(string name)
+        private Manager GetManager(string name)
         {
             var manager = ManagerRepository.Get(name);
             if (manager == null)
@@ -50,7 +57,7 @@ namespace DataAccessLayer
             return manager;
         }
 
-        private IProduct GetProduct(string name, int price)
+        private Product GetProduct(string name, int price)
         {
             var product = ProductRepository.Get(name);
             if (product == null)
@@ -61,7 +68,7 @@ namespace DataAccessLayer
             return product;
         }
 
-        private IClient GetClient(string name)
+        private Client GetClient(string name)
         {
             var client = ClientRepository.Get(name);
             if (client == null)
@@ -72,14 +79,20 @@ namespace DataAccessLayer
             return client;
         }
 
-        public void RemoveRecords(IEnumerable<ISoldProduct> items)
+        public void RemoveRecords(IEnumerable<SoldProductDTO> items)
         {
-            SoldProductRepository.Delete(items);
+            lock (_sync)
+            {
+                SoldProductRepository.Delete(items.Select(e => DataMapper.ToSoldProduct(e)));
+            }
         }
 
         public void Save()
         {
-            SoldProductRepository.Save();
+            lock (_sync)
+            {
+                SoldProductRepository.Save();
+            }
         }
     }
 }

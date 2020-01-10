@@ -19,7 +19,7 @@ namespace BusinessLogic.Csv
 
         public bool ReadCsvFile(string path, string managerName)
         {
-            using (var reader = new StreamReader(path, Encoding.ASCII))
+            using (var reader = new StreamReader(path))
             {
                 using (var csvReader = new CsvReader(reader))
                 {
@@ -27,7 +27,7 @@ namespace BusinessLogic.Csv
                     csvReader.Configuration.RegisterClassMap<CsvRecordMap>();
                     csvReader.Read();
                     csvReader.ReadHeader();
-                    var products = new List<ISoldProduct>();
+                    var products = new List<SoldProductDTO>();
                     while (csvReader.Read())
                     {
                         CsvRecord record;

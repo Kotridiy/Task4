@@ -15,6 +15,7 @@ namespace DataAccessLayer
 
         public ApplicationContext()
         {
+            Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 

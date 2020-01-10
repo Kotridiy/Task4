@@ -1,14 +1,11 @@
-﻿using FileWatcherModel;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
 namespace FileWatcherData.Interfaces
 {
     interface IFileWatcherRepository
     {
-        IFile Get(Guid guid);
-        void Add(IFile file);
+        WatchFile Get(Guid guid);
+        void Add(WatchFile file);
         void Save();
     }
 }

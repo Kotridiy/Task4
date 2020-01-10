@@ -1,18 +1,13 @@
-﻿using FileWatcherModel;
-using System;
+﻿using System;
 
-namespace FileWatcherData
+namespace FileWatcherModel
 {
-    public class WatchFile
+    public class FileDTO
     {
         public Guid Id { get; set; }
-
         public string Name { get; set; }
-
         public long Length { get; set; }
-
         public DateTime LastWriteTime { get; set; }
-
         public FileStatus Status { get; set; }
     }
 }

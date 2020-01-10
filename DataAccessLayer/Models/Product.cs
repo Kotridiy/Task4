@@ -1,15 +1,14 @@
-﻿using DataModel;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DataAccessLayer.Models
 {
-    public class Product : IProduct
+    public class Product
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public decimal Price { get; set; }
         [NotMapped]
-        public ICollection<ISoldProduct> SoldProducts { get; set; }
+        public IEnumerable<SoldProduct> SoldProducts { get; set; }
     }
 }

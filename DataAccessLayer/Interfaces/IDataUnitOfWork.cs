@@ -5,8 +5,8 @@ namespace DataAccessLayer.Interfaces
 {
     public interface IDataUnitOfWork
     {
-        ISoldProduct AddRecord(ICsvRecord record);
-        void RemoveRecords(IEnumerable<ISoldProduct> items);
+        SoldProductDTO AddRecord(CsvRecord record);
+        void RemoveRecords(IEnumerable<SoldProductDTO> items);
         void Save();
     }
 }

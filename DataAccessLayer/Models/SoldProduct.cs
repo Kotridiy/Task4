@@ -1,18 +1,13 @@
-﻿using DataModel;
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
 
 namespace DataAccessLayer.Models
 {
-    public class SoldProduct : ISoldProduct
+    public class SoldProduct
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        [NotMapped]
-        public IClient Client { get; set; }
-        [NotMapped]
-        public IManager Manager { get; set; }
-        [NotMapped]
-        public IProduct Product { get; set; }
+        public Client Client { get; set; }
+        public Manager Manager { get; set; }
+        public Product Product { get; set; }
     }
 }

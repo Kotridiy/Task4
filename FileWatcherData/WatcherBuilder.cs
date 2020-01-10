@@ -9,8 +9,8 @@ namespace FileWatcherData
     {
         public static IWatcherUnitOfWork CreateUnitOfWork(string info = "")
         {
-            FileWatcherContext context = new FileWatcherContext();
-            IFileWatcherRepository repository = new FileWatcherRepository(context);
+            WatcherContext context = new WatcherContext();
+            IFileWatcherRepository repository = new WatcherRepository(context);
             return new WatcherUnitOfWork(repository);
         }
     }

@@ -1,28 +1,48 @@
 ﻿using DataAccessLayer.Interfaces;
-using DataModel;
+using DataAccessLayer.Models;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace DataAccessLayer.Repositories
 {
-    class ProductRepository : IGenericRepository<IProduct>
+    class ProductRepository : IGenericRepository<Product>
     {
         ApplicationContext Context { get; set; }
+        ReaderWriterLockSlim _locker;
 
         public ProductRepository(ApplicationContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
+            _locker = new ReaderWriterLockSlim();
         }
 
-        public void AddAndSave(IProduct entity)
+        public void AddAndSave(Product entity)
         {
-            Context.Add(entity);
-            Context.SaveChanges();
+            Context.Add(entity); _locker.EnterWriteLock();
+            try
+            {
+                Context.SaveChanges();
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
         }
 
-        public IProduct Get(string name)
+        public Product Get(string name)
         {
-            return Context.Products.First(e => e.Name == name);
+            _locker.EnterReadLock();
+            Product model;
+            try
+            {
+                model = Context.Products.FirstOrDefault(e => e.Name == name);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
+            return model;
         }
     }
 }

@@ -5,12 +5,13 @@ using System.Collections.Generic;
 
 namespace FileWatcherData
 {
-    public class FileWatcherContext : DbContext
+    public class WatcherContext : DbContext
     {
         public DbSet<WatchFile> Files { get; set; }
 
-        public FileWatcherContext()
+        public WatcherContext()
         {
+            Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 

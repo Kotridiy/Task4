@@ -1,28 +1,49 @@
 ﻿using DataAccessLayer.Interfaces;
-using DataModel;
+using DataAccessLayer.Models;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace DataAccessLayer.Repositories
 {
-    class ManagerRepository : IGenericRepository<IManager>
+    class ManagerRepository : IGenericRepository<Manager>
     {
         ApplicationContext Context { get; set; }
+        ReaderWriterLockSlim _locker;
 
         public ManagerRepository(ApplicationContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
+            _locker = new ReaderWriterLockSlim();
         }
 
-        public void AddAndSave(IManager entity)
+        public void AddAndSave(Manager entity)
         {
             Context.Add(entity);
-            Context.SaveChanges();
+            _locker.EnterWriteLock();
+            try
+            {
+                Context.SaveChanges();
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
         }
 
-        public IManager Get(string name)
+        public Manager Get(string name)
         {
-            return Context.Managers.First(e => e.Name == name);
+            _locker.EnterReadLock();
+            Manager model;
+            try
+            {
+                model = Context.Managers.FirstOrDefault(e => e.Name == name);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
+            return model;
         }
     }
 }
