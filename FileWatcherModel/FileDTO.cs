@@ -9,5 +9,7 @@ namespace FileWatcherModel
         public long Length { get; set; }
         public DateTime LastWriteTime { get; set; }
         public FileStatus Status { get; set; }
+
+        public string FullPath { get; set; }
     }
 }

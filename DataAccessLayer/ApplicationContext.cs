@@ -13,15 +13,15 @@ namespace DataAccessLayer
         public DbSet<Product> Products { get; set; }
         public DbSet<SoldProduct> SoldProducts { get; set; }
 
-        public ApplicationContext()
+        public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {
             Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Monitor_data;Trusted_Connection=True;");
-        }
+        }*/
     }
 }

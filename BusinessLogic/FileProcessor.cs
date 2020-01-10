@@ -22,6 +22,15 @@ namespace BusinessLogic
         {
             settings ??= new FileLogicSettings();
             readyPath = settings.readyPath;
+            try
+            {
+                Directory.CreateDirectory(readyPath);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Directory create exception!");
+                throw;
+            }
             WatcherUnitOfWork = WatcherBuilder.CreateUnitOfWork(settings.watcherConnection);
             DataUnitOfWork = DataAccessBuilder.CreateUnitOfWork(settings.dataConnection);
             CsvParser = new CsvParser(DataUnitOfWork);
@@ -43,8 +52,8 @@ namespace BusinessLogic
                     copyNum = int.Parse(match.Groups[2].Value);
                 }
 
-                var file = WatcherUnitOfWork.GetFile(fileID);
-                if (file == null || file.Status == FileStatus.Failed || true)
+                FileDTO file = GetFile(fileID);
+                if (file == null || file.Status == FileStatus.Failed)
                 {
                     if (file == null)
                     {
@@ -54,24 +63,54 @@ namespace BusinessLogic
                             Name = info.Name,
                             LastWriteTime = info.LastWriteTime,
                             Length = info.Length,
+                            FullPath = info.FullName
                         };
                     }
                     file.Status = FileStatus.OnReading;
-                    WatcherUnitOfWork.AddFile(file);
+                    SaveFile(file);
 
-                    Task<FileDTO> readingTask = new Task<FileDTO>(() => ReadFile(file, info.FullName, managerName));
+                    Task<FileDTO> readingTask = new Task<FileDTO>(() => ReadFile(file, managerName));
                     Task afterReadTask = readingTask.ContinueWith(task => AfterReading(task.Result));
                     readingTask.Start();
                 }
             }
         }
 
+        private void SaveFile(FileDTO file)
+        {
+            try
+            {
+                WatcherUnitOfWork.AddFileAndSave(file);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Can't add file to database");
+            }
+        }
+
+        private FileDTO GetFile(Guid fileID)
+        {
+            FileDTO file;
+            try
+            {
+                file = WatcherUnitOfWork.GetFile(fileID);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Can't get file in database");
+                file = null;
+            }
+
+            return file;
+        }
+
         private void AfterReading(FileDTO file)
         {
-            WatcherUnitOfWork.ModifyStatus(file.Id, file.Status);
+            WatcherUnitOfWork.ModifyStatusAndSave(file.Id, file.Status);
             if (file.Status == FileStatus.Success)
             {
                 Console.WriteLine(file.Name + " read");
+                File.Move(file.FullPath, readyPath + file.Name);
             }
             else
             {
@@ -79,9 +118,9 @@ namespace BusinessLogic
             }
         }
 
-        private FileDTO ReadFile(FileDTO file, string fullpath, string managerName)
+        private FileDTO ReadFile(FileDTO file, string managerName)
         {
-            if (CsvParser.ReadCsvFile(fullpath, managerName))
+            if (CsvParser.ReadCsvFile(file.FullPath, managerName))
             {
                 file.Status = FileStatus.Success;
             }

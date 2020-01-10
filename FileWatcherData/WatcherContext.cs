@@ -9,15 +9,15 @@ namespace FileWatcherData
     {
         public DbSet<WatchFile> Files { get; set; }
 
-        public WatcherContext()
+        public WatcherContext(DbContextOptions<WatcherContext> options) : base(options)
         {
             Database.EnsureDeleted();
             Database.EnsureCreated();
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=File_watcher;Trusted_Connection=True;");
-        }
+        }*/
     }
 }

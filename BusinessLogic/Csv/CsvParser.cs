@@ -42,12 +42,41 @@ namespace BusinessLogic.Csv
                         }
 
                         record.Manager = managerName;
-                        products.Add(UnitOfWork.AddRecord(record));
+                        var product = AddRecord(record);
+                        if (product == null)
+                        {
+                            UnitOfWork.RemoveRecords(products);
+                            return false;
+                        }
+                        products.Add(product);
+                        AddRecord(record);
                     }
-                    UnitOfWork.Save();
+                    try
+                    {
+                        UnitOfWork.Save();
+                    }
+                    catch (Exception)
+                    {
+
+                        throw;
+                    }
                     return true;
                 }
             }
+        }
+
+        private SoldProductDTO AddRecord(CsvRecord record)
+        {
+            SoldProductDTO product = null;
+            try
+            {
+                product = UnitOfWork.AddRecord(record);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Can't add record {{ {record} }} to database");
+            }
+            return product;
         }
     }
 }

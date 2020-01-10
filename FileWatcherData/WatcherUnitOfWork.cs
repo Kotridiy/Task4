@@ -18,7 +18,7 @@ namespace FileWatcherData
             return FileMapper.ToFileDTO(Repository.Get(guid));
         }
 
-        public void AddFile(FileDTO file)
+        public void AddFileAndSave(FileDTO file)
         {
             if (file.Id == null)
             {
@@ -28,7 +28,7 @@ namespace FileWatcherData
             Repository.Save();
         }
 
-        public void ModifyStatus(Guid guid, FileStatus status)
+        public void ModifyStatusAndSave(Guid guid, FileStatus status)
         {
             WatchFile file = Repository.Get(guid);
             if (file != null) 
